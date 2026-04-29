@@ -7,13 +7,12 @@ const Task = require("./models/task");
 
 const app = express();
 
+// ✅ CORS FIX (Express 5 compatible)
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type"]
+  origin: "http://localhost:5173",   // frontend url
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"],
 }));
-
-
 
 app.use(express.json());
 
@@ -48,19 +47,22 @@ app.post("/add", async (req, res) => {
   }
 });
 
-// PUT update task text — Task 3 requirement
+// PUT update task text
 app.put("/update/:id", async (req, res) => {
   try {
     const { text } = req.body;
     if (!text || text.trim() === "") {
       return res.status(400).json({ error: "Task text is required" });
     }
+
     const updatedTask = await Task.findByIdAndUpdate(
       req.params.id,
       { text: text.trim() },
       { new: true }
     );
+
     if (!updatedTask) return res.status(404).json({ error: "Task not found" });
+
     res.json(updatedTask);
   } catch (err) {
     res.status(500).json({ error: "Failed to update task" });
@@ -72,19 +74,22 @@ app.patch("/tasks/:id", async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ error: "Task not found" });
+
     task.completed = !task.completed;
     await task.save();
+
     res.json(task);
   } catch (err) {
     res.status(500).json({ error: "Failed to update task" });
   }
 });
 
-// DELETE a task — Task 3 requirement
+// DELETE a task
 app.delete("/delete/:id", async (req, res) => {
   try {
     const task = await Task.findByIdAndDelete(req.params.id);
     if (!task) return res.status(404).json({ error: "Task not found" });
+
     res.json({ message: "Task deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete task" });
